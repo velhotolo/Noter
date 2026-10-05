@@ -100,8 +100,8 @@ The UI and the database run in the same process, so button callbacks talk to the
 - [x] Persistent storage with SQLite
 - [ ] Filter by tag
 - [ ] Search
-- [ ] Delete from the UI
-- [ ] Edit from the UI
+- [x] Delete from the UI
+- [x] Edit from the UI
 
 ## 🤝 Contributing
 
