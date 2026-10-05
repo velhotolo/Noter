@@ -76,24 +76,6 @@ function N.create(note, tag)
     return nil
 end
 
-
--- Update notes function
-
-function N.update(id, note, tag)
-    local stmt = db:prepare("UPDATE notes SET note = ?, tag = ? WHERE id = ?")
-
-    if not stmt then
-        return false
-    end
-
-    stmt:bind_values(note, tag, id)
-    local res = stmt:step()
-    stmt:finalize()
-
-    return res == sqlite3.DONE and db:changes() > 0
-end
-
-
 --Delete notes function
 
 function N.delete(id)

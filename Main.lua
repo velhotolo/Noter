@@ -1,98 +1,146 @@
 local lwtk = require("lwtk")
-local N = require("Database")
+local N    = require("Database")
+-- Basic upvalues
+local Column, Row   = lwtk.Column, lwtk.Row
+local PushButton    = lwtk.PushButton
+local TextLabel     = lwtk.TextLabel
+local TitleText     = lwtk.TitleText
+local Space         = lwtk.Space
 
---This is the second application I'm using lwtk and I'm not really sure about what I'm doing :D
--- So bare with me as the app progresses. There are some funcionalities I want to add but need
--- to read more documentation and the example's codes. So not a lot of comments right now.
+-- Note and tag, super immportant
+local note = lwtk.TextInput { text = "" }
+local tag  = lwtk.TextInput { text = "" }
 
-local app = lwtk.Application({ name = "Noter" })
-local win = lwtk.Window(app, { title = "Noter v0.1", size = { 800, 600 } })
-local main_col = lwtk.Column()
-local list_container = lwtk.Column()
+local app         = lwtk.Application("Noter")
 
--- Function used many times
+-- Info regarding the window size feature
+local normalSize  = { 1200, 900 }
+local miniSize    = { 90, 45 }
+local isMinimized = false
+local win
+local mainContent
+local btnToggle
 
-local function refresh_notes()
-    while #list_container > 0 do
-        local child = list_container[#list_container]
-        table.remove(list_container, #list_container)
-        child:_setParent(nil)
+-- Other super important stuff for things to work
+local editingId = nil
+local list = Column { id = "list" }
+local listRows    = {}
+
+-- Refresh list of notes for when adding or deleting
+local function refresh()
+    for i = #listRows, 1, -1 do
+        list:removeChild(listRows[i])
+        listRows[i] = nil
     end
 
     local notes = N.get_all()
     if #notes == 0 then
-        list_container:addChild(lwtk.TextLabel({ text = "No notes right now..." }))
+        listRows[1] = list:addChild(TextLabel {
+            text = "No notes right now..." })
         return
     end
 
+    -- Edit and Remove functions
     for _, n in ipairs(notes) do
-        list_container:addChild(lwtk.TextLabel({
-            text = string.format("[%s] %s", n.tag, n.note),
-        }))
+        listRows[#listRows + 1] = list:addChild(Row {
+            TextLabel { text = string.format("[%s] %s", n.tag, n.note) },
+            Space {},
+
+            PushButton {
+                text = "Edit",
+                onClicked = function()
+                    note:setText(n.note)
+                    tag:setText(n.tag)
+                end
+            },
+            PushButton {
+                text = "Remove",
+                onClicked = function()
+                    N.delete(n.id)
+                    refresh()
+                end
+            }
+        })
     end
 end
 
--- The goold old helpers creating fields to fill
+-- Tiny window button
+btnToggle = PushButton {
+    text      = "Mini",
+    onClicked = function()
+        isMinimized = not isMinimized
 
-local function create_field(label_text)
-    local container = lwtk.Column()
-    local input = lwtk.TextInput({ text = "" })
-    container:addChild(lwtk.TextLabel({ text = label_text }))
-    container:addChild(input)
-    return container, input
-end
+        if isMinimized then
+            mainContent:setVisible(false)
+            btnToggle:setText("Exp")
+            win:setSize(miniSize[1], miniSize[2])
+        else
+            mainContent:setVisible(true)
+            btnToggle:setText("Mini")
+            win:setSize(normalSize[1], normalSize[2])
+        end
 
--- Titles function
-
-local function create_section_header(title)
-    return lwtk.TextLabel({ text = string.format("--- %s ---", title) })
-end
-
--- This happens many times through the app. It's basically biding elements (columns, rows, fields)
--- to the main column (which in this case is the entire app)
-main_col:addChild(create_section_header("NOTES"))
-
-local col_note, input_note = create_field("Note:")
-local col_tag, input_tag = create_field("Tag:")
-
-local gRow = lwtk.Row()
-gRow:addChild(col_note)
-gRow:addChild(col_tag)
-main_col:addChild(gRow)
-
--- Add button
-
-local btn_add = lwtk.PushButton({ text = "Add" })
-btn_add:setOnClicked(function()
-    local note = input_note.text or ""
-    local tag = input_tag.text or ""
-
-    if not note:match("%S") or not tag:match("%S") then
-        return
+        if win.view then
+            win.view:postRedisplay()
+        end
     end
+}
 
-    local ok, res = pcall(N.create, note, tag)
-    if not ok or not res then
-        print("ERROR:", res)
-        return
-    end
 
-    input_note:setText("")
-    input_tag:setText("")
-    refresh_notes()
-    if win.view then
-        win.view:postRedisplay()
-    end
-end)
+-- The content for when the window is at it's normal size
+mainContent = Column {
+    TitleText { text = "Noter v0.1" },
+    Row {
+            TextLabel { text = "Note:" },
+            note,
+        },
+        Row {
+            TextLabel { text = "Tag:" },
+            tag,
+            PushButton { text = "Save", onClicked = function()
+                local note_text = note.text or ""
+                local tag_text  = tag.text or ""
 
--- Final bindings
+                if not note_text:match("%S") or not tag_text:match("%S") then return end
 
-main_col:addChild(btn_add)
-main_col:addChild(create_section_header("Registered notes:"))
-main_col:addChild(list_container)
-refresh_notes()
+                local ok, res
+                if editingId then
+                    ok, res = pcall(N.update, editingId, note_text, tag_text)
+                else
+                    ok, res = pcall(N.create, note_text, tag_text)
+                end
 
-win:addChild(main_col)
+                if not ok or not res then
+                    print("ERROR:", res)
+                    return
+                end
+
+                note:setText("")
+                tag:setText("")
+                editingId = nil
+                refresh()
+            end },
+        },
+        TitleText { text = "Registered notes:" },
+        list,
+    }
+
+-- Window creation
+
+win = app:newWindow {
+        title = "Noter",
+        size  = normalSize,
+        Column {
+            Row {
+                Space {},
+                btnToggle,
+            },
+            mainContent,
+        }
+    }
+
+
+
+refresh()
 win:show()
-
 app:runEventLoop()
