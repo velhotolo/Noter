@@ -1,5 +1,11 @@
 <div align="center">
 
+## ✨ Updates
+    
+So after almost having a stroke trying to figure out how the windows work on LWTK and how to implement filtering by tags, it's finally done. 
+I noticed that previously it was adding notes vertically, and after some point, the window disappeared :D I thought about creating multiple windows to hold more data but it felt a little counter-intuitive and there's no real documentation on LWTK (just code examples). My solution was creating more columns after some point (10 and 20), and setting a 30 notes limit. And I guess all the planned stuff is done now (edit, filter, remove, etc) yay!
+I also added a feature where you click on a button and reduce its size quite a lot. I was aiming to make it "always on top", but apparently LWTK doesn't support this. Phew
+
 # 📝 Noter
 
 **A tiny desktop notebook to get your notes off the desk and onto your laptop.**
@@ -20,7 +26,7 @@ Noter is my attempt to do the same thing on my laptop: quick, simple, tagged not
 
 ## ✨ Features
 
-**Available now (v0.1)**
+**Available now (v0.2)**
 
 - ➕ Add a note with a tag
 - 📋 View all registered notes in a list
@@ -28,10 +34,10 @@ Noter is my attempt to do the same thing on my laptop: quick, simple, tagged not
 
 **Planned**
 
-- 🏷️ Filter notes by tag
-- 🔍 Search through notes
-- 🗑️ Delete notes from the interface
-- ✏️ Edit existing notes
+- 🏷️ Filter notes by tag (done)
+- 🔍 Search through notes (ahm.. I don't think I'm going to do this)
+- 🗑️ Delete notes from the interface (done)
+- ✏️ Edit existing notes (done)
 
 > 🧩 The database layer already includes `get_by_tag`, `update` and `delete`.
 > They just aren't wired to the interface yet.
@@ -98,8 +104,7 @@ The UI and the database run in the same process, so button callbacks talk to the
 
 - [x] Create and list notes
 - [x] Persistent storage with SQLite
-- [ ] Filter by tag
-- [ ] Search
+- [x] Filter by tag
 - [x] Delete from the UI
 - [x] Edit from the UI
 
