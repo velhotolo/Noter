@@ -111,6 +111,7 @@ end
 local function onSave()
     local note_text = note.text or ""
     local tag_text  = tag.text or ""
+    refresh()
 
     if not note_text:match("%S") or not tag_text:match("%S") then return end
 
@@ -121,7 +122,7 @@ local function onSave()
 
     local ok, res
     if editingId then
-        ok, res = pcall(N.update, editingId, note_text, tag_text)
+        ok, res = pcall(N.update, note_text, tag_text, editingId)
     else
         ok, res = pcall(N.create, note_text, tag_text)
     end

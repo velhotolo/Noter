@@ -92,4 +92,15 @@ function N.delete(id)
     return res == sqlite3.DONE and db:changes() > 0
 end
 
+function N.update(note, tag, id)
+    local stmt = db:prepare("UPDATE notes SET note = ?, tag = ? WHERE id = ?")
+
+    stmt:bind_values(note, tag, id)
+    local res = stmt:step()
+    stmt:finalize()
+
+    return res == sqlite3.DONE and db:changes() > 0
+end
+
+
 return N
