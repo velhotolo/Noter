@@ -1,19 +1,21 @@
 <div align="center">
 
+# 📝 Noter
+
+**A tiny desktop notebook to get your notes off the desk and onto your laptop.**
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Lua-5.4-2C2D72?logo=lua&logoColor=white" alt="Lua 5.4">
+  <img src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white" alt="SQLite 3">
+  <img src="https://img.shields.io/badge/status-finished-brightgreen" alt="status finished">
+  <img src="https://img.shields.io/badge/version-0.1-blue" alt="version 0.1">
+</p>
+
 ## ✨ Updates
     
 So after almost having a stroke trying to figure out how the windows work on LWTK and how to implement filtering by tags, it's finally done. 
 I noticed that previously it was adding notes vertically, and after some point, the window disappeared :D I thought about creating multiple windows to hold more data but it felt a little counter-intuitive and there's no real documentation on LWTK (just code examples). My solution was creating more columns after some point (10 and 20), and setting a 30 notes limit. And I guess all the planned stuff is done now (edit, filter, remove, etc) yay!
 I also added a feature where you click on a button and reduce its size quite a lot. I was aiming to make it "always on top", but apparently LWTK doesn't support this. Phew
-
-# 📝 Noter
-
-**A tiny desktop notebook to get your notes off the desk and onto your laptop.**
-
-![Lua](https://img.shields.io/badge/Lua-5.4-2C2D72?logo=lua&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
-![Status](https://img.shields.io/badge/status-early%20development-orange)
-![Version](https://img.shields.io/badge/version-0.1-blue)
 
 </div>
 
