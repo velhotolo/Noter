@@ -1,5 +1,5 @@
-local lwtk = require("lwtk")
-local N    = require("Database")
+local lwtk        = require("lwtk")
+local N           = require("Database")
 
 -- Upvalues
 
@@ -11,27 +11,28 @@ local Space       = lwtk.Space
 
 -- Set up
 
-local PER_COLUMN = 10
-local MAX_NOTES  = 30
+local PER_COLUMN  = 10
+local MAX_NOTES   = 30
 local NORMAL_SIZE = { 1200, 900 }
 local MINI_SIZE   = { 90, 45 }
 
 -- Fields
 
-local note   = lwtk.TextInput { text = "" }
-local tag    = lwtk.TextInput { text = "" }
-local search = lwtk.TextInput { text = "" }   -- tag filter
+local note        = lwtk.TextInput { text = "" }
+local tag         = lwtk.TextInput { text = "" }
+local search      = lwtk.TextInput { text = "" } -- tag filter
 
 -- State
 
-local app = lwtk.Application("Noter")
+local app         = lwtk.Application("Noter")
+app:addStyle(require("dark_theme"))
 local win, mainContent, btnToggle
 
 local isMinimized = false
 local editingId   = nil
-local filterTerm  = ""        -- current search term
+local filterTerm  = "" -- current search term
 local list        = Row { id = "list" }
-local listRows    = {}        -- columns and labels on screen
+local listRows    = {}
 
 -- Data
 
@@ -86,7 +87,7 @@ local function refresh()
 
     if #notes == 0 then
         local msg = (filterTerm == "") and "No notes right now..."
-                                        or "No notes with this tag..."
+            or "No notes with this tag..."
         listRows[1] = list:addChild(TextLabel { text = msg })
         return
     end
@@ -140,7 +141,7 @@ end
 
 local function onSearch()
     local text = search.text or ""
-    filterTerm = text:lower():match("^%s*(.-)%s*$")   -- trim spaces
+    filterTerm = text:lower():match("^%s*(.-)%s*$") -- trim spaces
     refresh()
 end
 
@@ -190,7 +191,7 @@ mainContent = Column {
         TextLabel { text = "Filter by tag:" },
         search,
         PushButton { text = "Search", onClicked = onSearch },
-        PushButton { text = "Clear",  onClicked = onClear },
+        PushButton { text = "Clear", onClicked = onClear },
     },
 
     list,
