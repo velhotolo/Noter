@@ -33,8 +33,6 @@ function N.get_all()
     return notes
 end
 
-
-
 -- The application is a platform to take quick notes. You can use tags to filter them in the future.
 --
 function N.get_by_tag(tag)
@@ -54,7 +52,6 @@ function N.get_by_tag(tag)
     stmt:finalize()
     return results
 end
-
 
 -- Create notes function
 
@@ -101,6 +98,5 @@ function N.update(note, tag, id)
 
     return res == sqlite3.DONE and db:changes() > 0
 end
-
 
 return N

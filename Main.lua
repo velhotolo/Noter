@@ -1,59 +1,64 @@
 local lwtk        = require("lwtk")
 local N           = require("Database")
 
--- Upvalues
-
+-- 1. Upvalues and interface setup
 local Column, Row = lwtk.Column, lwtk.Row
 local PushButton  = lwtk.PushButton
 local TextLabel   = lwtk.TextLabel
 local TitleText   = lwtk.TitleText
 local Space       = lwtk.Space
 
--- Set up
-
-local PER_COLUMN  = 10
-local MAX_NOTES   = 30
+local PER_COLUMN  = 20
+local MAX_NOTES   = 120
 local NORMAL_SIZE = { 1200, 900 }
-local MINI_SIZE   = { 90, 45 }
 
--- Fields
-
+-- 2. Text fields
 local note        = lwtk.TextInput { text = "" }
 local tag         = lwtk.TextInput { text = "" }
-local search      = lwtk.TextInput { text = "" } -- tag filter
 
--- State
-
+-- 3. App state
 local app         = lwtk.Application("Noter")
 app:addStyle(require("dark_theme"))
 local win, mainContent, btnToggle
 
-local isMinimized = false
-local editingId   = nil
-local filterTerm  = "" -- current search term
-local list        = Row { id = "list" }
-local listRows    = {}
+local editingId    = nil
+local filterByNote = ""
+local filterByTag  = ""
 
--- Data
+local list         = Row { id = "list" }
+local listRows     = {}
 
+-- 4. Data filter. I merged tags and notes now.
 local function getVisibleNotes()
     local all = N.get_all()
-    if filterTerm == "" then
-        return all, #all
+
+    if filterByNote == "" and filterByTag == "" then
+        return all
     end
 
     local result = {}
     for _, n in ipairs(all) do
-        if tostring(n.tag):lower():find(filterTerm, 1, true) then
+        local matchNote = true
+        local matchTag = true
+
+        if filterByNote ~= "" then
+            matchNote = tostring(n.note):lower():find(filterByNote, 1, true) ~= nil
+        end
+
+        if filterByTag ~= "" then
+            matchTag = tostring(n.tag):lower():find(filterByTag, 1, true) ~= nil
+        end
+
+        if matchNote and matchTag then
             result[#result + 1] = n
         end
     end
-    return result, #all
+
+    return result
 end
 
--- List
-
-local function buildNoteRow(n, refresh)
+-- 5. Building the list
+local function buildNoteRow(n, refreshFunc)
     return Row {
         TextLabel { text = string.format("[%s] %s", n.tag, n.note) },
         Space {},
@@ -70,14 +75,13 @@ local function buildNoteRow(n, refresh)
             onClicked = function()
                 if editingId == n.id then editingId = nil end
                 N.delete(n.id)
-                refresh()
+                refreshFunc()
             end
         },
     }
 end
 
 local function refresh()
-    -- clean screen
     for i = #listRows, 1, -1 do
         list:removeChild(listRows[i])
         listRows[i] = nil
@@ -86,13 +90,11 @@ local function refresh()
     local notes = getVisibleNotes()
 
     if #notes == 0 then
-        local msg = (filterTerm == "") and "No notes right now..."
-            or "No notes with this tag..."
+        local msg = "No notes found with those filters...."
         listRows[1] = list:addChild(TextLabel { text = msg })
         return
     end
 
-    -- columns set up
     local columns = {}
     for i, n in ipairs(notes) do
         if i > MAX_NOTES then break end
@@ -107,17 +109,15 @@ local function refresh()
     end
 end
 
--- Actions
-
+-- 6. Button's actions
 local function onSave()
     local note_text = note.text or ""
     local tag_text  = tag.text or ""
-    refresh()
 
     if not note_text:match("%S") or not tag_text:match("%S") then return end
 
     if not editingId and #N.get_all() >= MAX_NOTES then
-        print("Limit of " .. MAX_NOTES .. " notes reached")
+        print("Notes limit of " .. MAX_NOTES .. " reached!")
         return
     end
 
@@ -139,72 +139,51 @@ local function onSave()
     refresh()
 end
 
-local function onSearch()
-    local text = search.text or ""
-    filterTerm = text:lower():match("^%s*(.-)%s*$") -- trim spaces
+local function onSearchCombined()
+    local n_text = note.text or ""
+    local t_text = tag.text or ""
+
+    filterByNote = n_text:lower():match("^%s*(.-)%s*$") or ""
+    filterByTag  = t_text:lower():match("^%s*(.-)%s*$") or ""
+
     refresh()
 end
 
 local function onClear()
-    search:setText("")
-    filterTerm = ""
+    filterByNote = ""
+    filterByTag = ""
+    note:setText("")
+    tag:setText("")
     refresh()
 end
 
-local function onToggleSize()
-    isMinimized = not isMinimized
-
-    if isMinimized then
-        mainContent:setVisible(false)
-        btnToggle:setText("Exp")
-        win:setSize(MINI_SIZE[1], MINI_SIZE[2])
-    else
-        mainContent:setVisible(true)
-        btnToggle:setText("Mini")
-        win:setSize(NORMAL_SIZE[1], NORMAL_SIZE[2])
-    end
-
-    if win.view then
-        win.view:postRedisplay()
-    end
-end
-
--- Interface
-btnToggle = PushButton { text = "Mini", onClicked = onToggleSize }
-
+-- 7. Interface and main loop
 mainContent = Column {
-    TitleText { text = "Noter v0.2" },
+    TitleText { text = "Noter v0.3" },
 
     Row {
         TextLabel { text = "Note:" },
         note,
+        PushButton { text = "Search", onClicked = onSearchCombined },
+        PushButton { text = "Clear", onClicked = onClear }
     },
     Row {
-        TextLabel { text = "Tag:" },
+        TextLabel { text = "Tag:  " },
         tag,
         PushButton { text = "Save", onClicked = onSave },
-    },
-
-    TitleText { text = "Registered notes:" },
-
-    Row {
-        TextLabel { text = "Filter by tag:" },
-        search,
-        PushButton { text = "Search", onClicked = onSearch },
+        PushButton { text = "Search", onClicked = onSearchCombined },
         PushButton { text = "Clear", onClicked = onClear },
     },
 
+    TitleText { text = "Registered notes:" },
     list,
 }
 
 win = app:newWindow {
-    title = "Noter",
+    title = "Noter 0.3",
     size  = NORMAL_SIZE,
     Column {
-        Row {
-            Space {},
-            btnToggle,
-        },
+        Row { Space {}, btnToggle },
         mainContent,
     }
 }
