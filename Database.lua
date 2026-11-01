@@ -18,23 +18,46 @@ local N = {}
 -- Retrieve all notes from Database
 
 function N.get_all()
-    local notes = {}
-    local stmt = db:prepare("SELECT id, note, tag FROM notes")
+local collection = {}
+local stmt = db:prepare("SELECT id, note, tag FROM notes ORDER BY id ASC")
+
+if not stmt then return {} end
+
+while stmt:step() == sqlite3.ROW do
+local row = stmt:get_named_values()
+table.insert(collection, row)
+end
+
+stmt:finalize()
+return collection
+end
+
+
+function N.get_notes(column_order)
+    -- Base query; gets everything as is
+    local query = "SELECT * FROM notes"
+
+    if column_order then
+    query = query .. " ORDER BY " .. column_order .. " COLLATE NOCASE ASC "
+    end
+
+    local stmt = db:prepare(query)
 
     if not stmt then
-        return notes
+        return {}
     end
 
+    local results = {}
     while stmt:step() == sqlite3.ROW do
-        table.insert(notes, stmt:get_named_values())
+        table.insert(results, stmt:get_named_values())
     end
 
-    stmt:finalize() -- this is super important to avoid memory leaks!
-    return notes
+    stmt:finalize()
+    return results
 end
 
 -- The application is a platform to take quick notes. You can use tags to filter them in the future.
---
+
 function N.get_by_tag(tag)
     local stmt = db:prepare("SELECT id, note, tag FROM notes WHERE tag = ?")
 
